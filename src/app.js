@@ -8,10 +8,14 @@ app.use(express.json());
 
 //Creating a post /signup using dynamic data insted of static
 app.post("/signup", async (req, res) => {
-  console.log(req);
-  console.log(req.body);
-  const user = new User(req.body);
+  console.log(req.body.emailId);
+  const email = req.body.emailId;
   try {
+    const checkEmail = await User.find({ emailId: email });
+    if (checkEmail) {
+      return res.status(400).send("Email already exists try logging in");
+    }
+    const user = new User(req.body);
     await user.save();
     res.send("User Added sucessfully");
   } catch (err) {
@@ -62,11 +66,29 @@ app.delete("/user", async (req, res) => {
 });
 
 //update user data by id
-app.patch("/user", async (req, res) => {
+app.patch("/user/:userId", async (req, res) => {
   //send as req params
-  const userId = req.body.userId;
+  const userId = req.params?.userId;
   const data = req.body;
   try {
+    const allowedUpdateFields = [
+      "photoUrl",
+      "about",
+      "gender",
+      "age",
+      "skills",
+    ];
+    //check if updating a field which is not allowed
+    //if want to use {} please return explicitly
+    const isUpdateFieldAllowed = Object.keys(data).every((k) =>
+      allowedUpdateFields.includes(k)
+    );
+    if (!isUpdateFieldAllowed) {
+      throw new Error("Update for field not allowed");
+    }
+    if (data?.skills.length > 10) {
+      throw new Error("Skills cant be more than 10");
+    }
     //finding user by id to update
     const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
@@ -74,7 +96,6 @@ app.patch("/user", async (req, res) => {
       //so we need to put this flag as true
       runValidators: true,
     });
-    console.log(user);
     res.send("User Updated");
   } catch (err) {
     res.status(400).send("Update failed: " + err.message);
