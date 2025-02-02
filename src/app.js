@@ -70,11 +70,14 @@ app.patch("/user", async (req, res) => {
     //finding user by id to update
     const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
+      //usually its false which means validators are run only when creating new document and not when patching
+      //so we need to put this flag as true
+      runValidators: true,
     });
     console.log(user);
     res.send("User Updated");
   } catch (err) {
-    res.status(400).send("Something went wrong");
+    res.status(400).send("Update failed: " + err.message);
   }
 });
 
