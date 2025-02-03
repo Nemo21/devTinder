@@ -2,20 +2,34 @@ const express = require("express");
 const app = express();
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const {
+  validateSignUpData,
+  checkForExistingEmail,
+} = require("./utils/validation");
+
+const bcrypt = require("bcrypt");
 
 //This coverts the send json to a javascript object and puts it in req.body
 app.use(express.json());
 
 //Creating a post /signup using dynamic data insted of static
 app.post("/signup", async (req, res) => {
-  console.log(req.body.emailId);
-  const email = req.body.emailId;
   try {
-    const checkEmail = await User.find({ emailId: email });
+    //validate data
+    validateSignUpData(req);
+    const { firstName, lastName, emailId, password } = req.body;
+    const checkEmail = await User.findOne({ emailId });
     if (checkEmail) {
       return res.status(400).send("Email already exists try logging in");
     }
-    const user = new User(req.body);
+    //Encrypt password
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
     await user.save();
     res.send("User Added sucessfully");
   } catch (err) {
@@ -23,6 +37,26 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+//Login
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    //finding user with this email in db
+    const user = await User.findOne({ emailId });
+    if (!user) {
+      throw new Error("Invalid creds");
+    }
+    //comparing login password with the one in db
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (isPasswordValid) {
+      res.send("Login successful");
+    } else {
+      throw new Error("Invalid creds");
+    }
+  } catch (err) {
+    res.status(400).send("ERROR : " + err.message);
+  }
+});
 //Get user by email
 app.get("/user", async (req, res) => {
   //get useremail by req params
