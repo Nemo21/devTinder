@@ -3,11 +3,14 @@ const connectionRequestSchema = new mongoose.Schema(
   {
     fromUserId: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      //here we create the reference to the collection data we need
       required: true,
     },
     toUserId: {
       //its the mongodb databases ._id
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     status: {

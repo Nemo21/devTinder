@@ -56,4 +56,34 @@ requestRouter.post(
     }
   }
 );
+
+requestRouter.post(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+      const { status, requestId } = req.params;
+      //You can only accept or reject the user from whom the request interested came from
+      const alllowedStatus = ["accepted", "rejected"];
+      if (!alllowedStatus.includes(status)) {
+        throw new Error("Invalid status type");
+      }
+      //Check if the person to whom the request is sent to is logged in or not
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: requestId, //if the request even exists or not
+        toUserId: loggedInUser._id, //check if person to whom request is sent is logged in or not
+        status: "interested", //can only reject or accept a user who is interested in the profile
+      });
+      if (!connectionRequest) {
+        throw new Error("Connection request not found");
+      }
+      connectionRequest.status = status;
+      const data = await connectionRequest.save();
+      res.json({ message: "Connection Request " + status, data });
+    } catch (error) {
+      res.status(400).send("ERROR: " + error.message);
+    }
+  }
+);
 module.exports = requestRouter;
