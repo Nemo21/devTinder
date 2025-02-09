@@ -1,5 +1,6 @@
 const express = require("express");
 const userRouter = express.Router();
+const User = require("../models/user");
 const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 
@@ -51,6 +52,51 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
     res.json({ data });
   } catch (err) {
     res.status(400).send("Error: ", err.message);
+  }
+});
+
+userRouter.get("/feed", userAuth, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+    //we are creating pagination
+    //default values if no query passed
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    //making sure that request is le(less than equal) to 50;
+    limit = limit > 50 ? 50 : limit;
+    //DRY RUN BY
+    //  /feed?page=1&limit=10 => 1-10 => .skip(0) & .limit(10)
+    //  /feed?page=2&limit=10 => 11-20 => .skip(10) & .limit(10)
+    //  /feed?page=3&limit=10 => 21-30 => .skip(20) & .limit(10)
+    //  /feed?page=4&limit=10 => 21-30 => .skip(20) & .limit(10)
+    const skipRecords = (page - 1) * limit;
+    const connectionRequest = await ConnectionRequest.find({
+      //Selects the users whom the logged in user has sent(first) OR recieved the connection request(second)
+      $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
+    }).select("fromUserId toUserId");
+
+    //we want to show users which whom loggedin user HAS NOT sent or received a request from
+    const hiddenUsersFromFeed = new Set();
+    connectionRequest.forEach((req) => {
+      hiddenUsersFromFeed.add(req.fromUserId.toString());
+      hiddenUsersFromFeed.add(req.toUserId, toString());
+    });
+
+    const users = await User.find({
+      $and: [
+        //profiles of his connections and people who have either sent him the request or got the request from him
+        { _id: { $nin: Array.from(hiddenUsersFromFeed) } },
+        { _id: { $ne: loggedInUser._id } },
+        //not shown his own profile
+      ],
+    })
+      .select("firstName lastName photoUrl age gender about skills")
+      .skip(skipRecords)
+      .limit(limit);
+
+    res.json({ data: users });
+  } catch (err) {
+    res.status(400).send("ERROR: " + err.message);
   }
 });
 module.exports = userRouter;
