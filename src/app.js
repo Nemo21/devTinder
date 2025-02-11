@@ -6,8 +6,15 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
+const cors = require("cors");
 
 //This coverts the send json to a javascript object and puts it in req.body
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 //allows us to parse cookie from server to req.body
 app.use(cookieParser());

@@ -36,6 +36,7 @@ authRouter.post("/login", async (req, res) => {
     const { emailId, password } = req.body;
     //finding user with this email in db
     const user = await User.findOne({ emailId });
+
     if (!user) {
       throw new Error("Invalid creds");
     }
@@ -49,7 +50,7 @@ authRouter.post("/login", async (req, res) => {
         expires: new Date(Date.now() + 8 * 3600000),
       });
       //this is expiration for cookie by express
-      res.send("Login successful");
+      res.send(user);
     } else {
       throw new Error("Invalid creds");
     }
