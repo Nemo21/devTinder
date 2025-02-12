@@ -6,6 +6,7 @@ const { validateSignUpData } = require("../utils/validation");
 
 //Creating a post /signup using dynamic data insted of static
 authRouter.post("/signup", async (req, res) => {
+  console.log("LOL");
   try {
     //validate data
     validateSignUpData(req);

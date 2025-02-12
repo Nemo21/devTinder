@@ -9,12 +9,7 @@ const userRouter = require("./routes/user");
 const cors = require("cors");
 
 //This coverts the send json to a javascript object and puts it in req.body
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
 //allows us to parse cookie from server to req.body
 app.use(cookieParser());
@@ -23,6 +18,11 @@ app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
+
+app.get("/", (req, res) => {
+  console.log("LOL");
+  res.send({data: "Hello World!"});
+});
 
 connectDB()
   .then(() => {
@@ -34,7 +34,6 @@ connectDB()
   .catch((err) => {
     console.error("Db connection not made");
   });
-
 //Pseudo@0901
 //Dojacat@069
 //Kanye@
