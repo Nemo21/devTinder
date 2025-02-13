@@ -49,8 +49,9 @@ authRouter.post("/login", async (req, res) => {
       res.cookie("token", token, {
         expires: new Date(Date.now() + 8 * 3600000),
       });
-      //this is expiration for cookie by express
-      res.send(user);
+      const responseData = { message: "Login successful", data: user };
+      console.log("Sending response:", responseData.data); // Log what’s being sent
+      res.status(200).json(responseData); // Ensure proper JSON response
     } else {
       throw new Error("Invalid creds");
     }
