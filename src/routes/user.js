@@ -11,7 +11,10 @@ userRouter.get("/user/requests/received", userAuth, async (req, res) => {
     const connectionRequests = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
       status: "interested",
-    }).populate("fromUserId", ["firstName", "lastName"]);
+    }).populate(
+      "fromUserId",
+      "firstName lastName photoUrl age gender about skills"
+    );
     //this will only return us id of the user who sent request
     //what we need is somehow information about the user who sent request
     //we use ref and populate to achieve that
@@ -38,8 +41,14 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
         { fromUserId: loggedInUser._id, status: "accepted" },
       ],
     })
-      .populate("fromUserId", ["firstName", "lastName"])
-      .populate("toUserId", ["firstName", "lastName"]);
+      .populate(
+        "fromUserId",
+        "firstName lastName photoUrl age gender about skills"
+      )
+      .populate(
+        "toUserId",
+        "firstName lastName photoUrl age gender about skills"
+      );
     const data = connectionRequest.map((row) => {
       //if fromuserid matches loggedin user it should show the person who accepted their request
       //and vica versa
