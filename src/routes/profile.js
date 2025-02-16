@@ -19,7 +19,8 @@ profileRouter.get("/profile/view", userAuth, async (req, res) => {
   }
 });
 
-profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
+profileRouter.put("/profile/edit", userAuth, async (req, res) => {
+  console.log("Received PATCH request to /profile/edit");
   try {
     //check if in request client is editing a field which is not allowed
     if (!validateEditProfileData(req)) {
