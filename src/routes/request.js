@@ -4,6 +4,8 @@ const User = require("../models/user");
 const ConnectionRequest = require("../models/connectionRequest");
 const requestRouter = express.Router();
 
+const sendEmail = require("../utils/sendEmail");
+
 requestRouter.post(
   "/request/send/:status/:toUserId",
   userAuth,
@@ -46,6 +48,12 @@ requestRouter.post(
         status,
       });
       const data = await connectionRequest.save();
+
+      const emailRes = await sendEmail.run(
+        "Oh someone wants to be your friend " + req.user.firstName,
+        req.user.firstName + " is " + status + " in " + toUser.firstName
+      );
+      console.log(emailRes);
       res.json({
         message:
           req.user.firstName + " is " + status + " in " + toUser.firstName,
